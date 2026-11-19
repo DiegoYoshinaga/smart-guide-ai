@@ -89,14 +89,17 @@
     const log = document.getElementById('chat-log');
     const intent = findIntent(message);
     if (!intent) {
-      appendMessage('Ainda não consegui identificar o tipo de projeto. Conte um pouco mais: você precisa de materiais para pintura, hidráulica, elétrica, ferramentas, construção, jardinagem ou organização?', 'assistant');
+      appendMessage('Ainda não consegui identificar o tipo de projeto. Conte um pouco mais: você precisa de materiais para pintura, hidráulica, eletrica, ferramentas, construção, jardinagem ou organização?', 'assistant');
       return;
     }
     const loading = appendMessage('Vou consultar os produtos disponíveis...', 'assistant');
     loading.classList.add('is-loading');
-    let result;
+    let response;
     try {
-      result = await window.SmartGuideUI.loadProductsWithDemo(function () {
+      response = await window.SmartGuideAPI.sendChatMessage(message);
+    } catch (error) {
+      console.error('Falha ao gerar recomendações.', error);
+      const fallback = await window.SmartGuideUI.loadProductsWithDemo(function () {
         if (!document.getElementById('chat-demo-warning')) {
           const warning = document.createElement('p');
           warning.id = 'chat-demo-warning';
@@ -105,13 +108,15 @@
           log.insertBefore(warning, loading);
         }
       });
-    } catch (error) {
-      loading.remove();
-      throw error;
+      response = {
+        resposta: intent.response,
+        intencao: intent.name,
+        produtos: fallback.products || []
+      };
     }
     loading.remove();
-    appendMessage(intent.response, 'assistant');
-    const recommended = matchingProducts(result.products, intent);
+    appendMessage(response.resposta || intent.response, 'assistant');
+    const recommended = matchingProducts(response.produtos || [], intent);
     if (!recommended.length) {
       appendMessage('Não encontrei produtos dessa categoria no catálogo disponível. Tente outra descrição ou consulte o catálogo completo.', 'assistant');
       return;
