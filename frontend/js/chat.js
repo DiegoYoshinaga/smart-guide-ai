@@ -100,13 +100,7 @@
     } catch (error) {
       console.error('Falha ao gerar recomendações.', error);
       const fallback = await window.SmartGuideUI.loadProductsWithDemo(function () {
-        if (!document.getElementById('chat-demo-warning')) {
-          const warning = document.createElement('p');
-          warning.id = 'chat-demo-warning';
-          warning.className = 'status-banner';
-          warning.textContent = 'Backend indisponível: as recomendações abaixo vêm do catálogo demonstrativo local.';
-          log.insertBefore(warning, loading);
-        }
+        // fallback para demonstracao, sem aviso ao usuario
       });
       response = {
         resposta: intent.response,
